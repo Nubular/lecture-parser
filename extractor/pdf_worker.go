@@ -18,6 +18,10 @@ func main() {
 	}
 }
 
+/*
+Implement Max page count using pdfinfo or imagemagick.
+*/
+
 // ConvertPdfToJpg will take a filename of a pdf file and convert the file into an
 // image which will be saved back to the same location. It will save the image as a
 // high resolution jpg file with minimal compression.
