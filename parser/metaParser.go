@@ -48,8 +48,8 @@ type LectureMeta struct {
 }
 
 type Deck struct {
-	ID     string `xml:"id,attr" json:"-id"`
-	Src    string `xml:"src,attr" json:"-src"`
+	ID     string `xml:"id,attr" json:"-id,omitempty"`
+	Src    string `xml:"src,attr" json:"-src,omitempty"`
 	Active bool   `xml:"active,attr,omitempty" json:"-active,omitempty"`
 }
 

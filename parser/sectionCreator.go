@@ -23,16 +23,15 @@ var META *LectureMeta
 
 // Section is a Struct that holds the information about the current section.
 type Section struct {
-	ID        int    `json:"id"`
-	Voice     string `json:"voice"`
-	FrameType string `json:"frameType"`
-	ImageSrc  string `json:"imageSrc,omitempty"`
-	FrameFit  string `json:"frameFit,omitempty"`
-	SlideDeck Deck   `json:"slideDeck"`
-	Page      int    `json:"page"`
-	VideoID   string `json:"videoId,omitempty"`
-	AudioID   string `json:"audioId,omitempty"`
-	SSML      string `json:"ssml"`
+	ID           int               `json:"id"`
+	Voice        string            `json:"voice"`
+	FrameType    string            `json:"frameType"`
+	ResourceSrc  string            `json:"resourceSrc,omitempty"`
+	ResourceAttr map[string]string `json:"resourceAttr,omitempty"`
+	FrameFit     string            `json:"frameFit,omitempty"`
+	SlideDeck    Deck              `json:"slideDeck,omitempty"`
+	Page         int               `json:"page"`
+	SSML         string            `json:"ssml,omitempty"`
 }
 
 func customTag(tag string) bool {
@@ -72,7 +71,6 @@ func handleSlide(tag xml.StartElement) {
 					CURRENT.SlideDeck = deck
 				}
 			}
-			fmt.Println("Changing Deck to", attr.Value)
 		} else if attr.Name.Local == "page" {
 
 			num, err := strconv.Atoi(attr.Value)
@@ -93,16 +91,16 @@ func handleSlide(tag xml.StartElement) {
 	}
 }
 
-//Check for resource existence for images, audio and video
 func handleImage(tag xml.StartElement) {
 	if len(tag.Attr) == 0 {
 		log.Println("Ignoring <image/> with no attr")
 	}
 
 	CURRENT.FrameType = "image"
+
 	for _, attr := range tag.Attr {
 		if attr.Name.Local == "src" {
-			CURRENT.ImageSrc = attr.Value
+			CURRENT.ResourceSrc = attr.Value
 		}
 		if attr.Name.Local == "fit" {
 			CURRENT.FrameFit = attr.Value
@@ -110,18 +108,29 @@ func handleImage(tag xml.StartElement) {
 	}
 }
 
-func handleAudio(tag xml.StartElement) {
+func addResourceSection(tag xml.StartElement) {
 	if len(tag.Attr) == 0 {
-		log.Println("Ignoring <audio/> with no attr")
+		log.Printf("Ignoring <%s/> with no attr\n", tag.Name.Local)
 	}
-	CURRENT.FrameType = "audio"
-}
 
-func handleVideo(tag xml.StartElement) {
-	if len(tag.Attr) == 0 {
-		log.Println("Ignoring <video/> with no attr")
+	section := Section{ID: CURRENT.ID}
+	section.ResourceAttr = make(map[string]string)
+
+	for _, attr := range tag.Attr {
+		if attr.Name.Local == "src" {
+			section.ResourceSrc = attr.Value
+		}
+		section.ResourceAttr[attr.Name.Local] = attr.Value
 	}
-	CURRENT.FrameType = "video"
+	if tag.Name.Local == "audio" {
+		section.FrameType = "audio"
+	} else if tag.Name.Local == "video" {
+		section.FrameType = "video"
+	}
+
+	SECTIONS = append(SECTIONS, section)
+	CURRENT.ID = CURRENT.ID + 1
+
 }
 
 func handleControlTag(tag xml.StartElement) {
@@ -129,12 +138,11 @@ func handleControlTag(tag xml.StartElement) {
 
 	case "slide":
 		handleSlide(tag)
-	case "audio":
-		handleAudio(tag)
-	case "video":
-		handleVideo(tag)
+	case "audio", "video":
+		addResourceSection(tag)
 	case "image":
 		handleImage(tag)
+
 	}
 }
 
@@ -153,22 +161,19 @@ func addSSMLSection(ssml string) {
 	}
 
 	switch CURRENT.FrameType {
+
 	case "slide":
 		section.SlideDeck = CURRENT.SlideDeck
 		section.Page = CURRENT.Page
 	case "image":
-		section.ImageSrc = CURRENT.ImageSrc
+		section.ResourceSrc = CURRENT.ResourceSrc
 		section.FrameFit = CURRENT.FrameFit
 	}
-	j, _ := json.Marshal(section)
-	fmt.Println(string(j))
-	// SECTIONS = append(SECTIONS, section)
+	// j, _ := json.Marshal(section)
+	// fmt.Println(string(j))
+	SECTIONS = append(SECTIONS, section)
 
 	CURRENT.ID = CURRENT.ID + 1
-}
-
-func addResource() {
-
 }
 
 func getSections(meta *LectureMeta, xmlPath string) (string, error) {
@@ -215,8 +220,6 @@ func getSections(meta *LectureMeta, xmlPath string) (string, error) {
 
 				handleControlTag(se)
 
-				printSections()
-
 				start = end
 				start = decoder.InputOffset()
 			}
@@ -225,13 +228,14 @@ func getSections(meta *LectureMeta, xmlPath string) (string, error) {
 		end = decoder.InputOffset()
 	}
 
+	printSections()
 	return "", nil
 }
 
 func printSections() {
 	fmt.Print("\n[")
 	for _, section := range SECTIONS {
-		j, _ := json.Marshal(section)
+		j, _ := json.MarshalIndent(section, "", "	")
 		fmt.Print(string(j), ",\n")
 	}
 	fmt.Print("]\n")

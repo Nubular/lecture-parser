@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := extractor.ConvertPdfToJpg("test.pdf", "image.jpeg"); err != nil {
+	if err := extractor.GetPDFPage("test.pdf", "image.jpeg", 2); err != nil {
 		log.Fatal(err)
 	}
 }
