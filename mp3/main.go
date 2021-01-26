@@ -63,8 +63,9 @@ func main() {
 	outPath := filepath.Join(absPath, "output")
 
 	err = createMP3(`<speak>
-	Welcome to a short example that will demonstrate the basic features of the software.\r\n\r\nCurrently, slide 1 is set as the active slide deck.
-					<speak/>`, filepath.Join(outPath, "test.mp3"), true)
+    You say, <phoneme alphabet="ipa" ph="pɪˈkɑːn">pecan</phoneme>. 
+    I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.
+</speak>`, filepath.Join(outPath, "test.mp3"), false)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -85,7 +86,7 @@ func createMP3(ssml string, outPath string, cacheFiles bool) error {
 		//Making request to Polly
 		//Old code for 3000 characters - using synthesize speech
 		svc := polly.New(sess)
-		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(ssml), VoiceId: aws.String("Joanna")}
+		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(ssml), TextType : aws.String("ssml"),VoiceId: aws.String("Joanna")}
 		output, err := svc.SynthesizeSpeech(input)
 
 		if err != nil {
