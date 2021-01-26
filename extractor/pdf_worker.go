@@ -8,6 +8,7 @@ import (
 	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
+// Implement max page count using pdfinfo
 func main() {
 
 	pdfName := "test.pdf"
@@ -18,12 +19,15 @@ func main() {
 	}
 }
 
-/*
-Implement Max page count using pdfinfo or imagemagick.
-*/
+// Frame defines the page and it's imageName
+type Frame struct {
+	Page      int    `json:"page"`
+	ImageName string `json:"imageName"`
+}
+
 // GetPDFPage extracts the specified page number from the supplied file
 func GetPDFPage(pdfName string, imageName string, pageNum int) error {
-	// path := filepath.Join("../../input", pdfName)
+
 	absPath, err := os.Getwd()
 	if err != nil {
 		return err
@@ -43,7 +47,6 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 
-	// Must be *before* ReadImageFile
 	if err := mw.SetResolution(72, 72); err != nil {
 		return err
 	}
@@ -53,7 +56,7 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 		return err
 	}
 
-	mw.SetIteratorIndex(pageNum)
+	mw.SetIteratorIndex(pageNum - 1)
 
 	log.Print("Converting ", pdfName, absPath)
 
@@ -71,11 +74,62 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 	return mw.WriteImage(filepath.Join(Outpath, imageName))
 }
 
+//GetPDFPages extracts the pages in the supplied array
+func GetPDFPages(inPath string, outPath string, frames []Frame) error {
+
+	if _, err := os.Stat(outPath); os.IsNotExist(err) {
+		log.Println("Output dir not found. Creating at ", outPath)
+		os.Mkdir(outPath, os.ModePerm)
+	}
+
+	imagick.Initialize()
+	defer imagick.Terminate()
+
+	mw := imagick.NewMagickWand()
+	defer mw.Destroy()
+
+	// if err := mw.SetResolution(100, 100); err != nil {
+	// 	return err
+	// }
+
+	// Load the image file into imagick
+	if err := mw.ReadImage(inPath); err != nil {
+		return err
+	}
+
+	// fmt.Println(mw.GetNumberImages())
+
+	// Set any compression (100 = max quality)
+	if err := mw.SetCompressionQuality(100); err != nil {
+		return err
+	}
+
+	if err := mw.SetFormat("jpg"); err != nil {
+		return err
+	}
+	var err error
+	for _, frame := range frames {
+
+		mw.SetIteratorIndex(frame.Page - 1)
+
+		// if err := mw.SetImageFormat("jpeg"); err != nil {
+		// 	return err
+		// }
+
+		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.ImageName))
+
+		// Save File
+		err = mw.WriteImage(filepath.Join(outPath, frame.ImageName))
+
+	}
+	return err
+}
+
 // GetPDF will take a filename of a pdf file and convert the file into an
 // image which will be saved back to the same location. It will save the image as a
 // high resolution jpg file with minimal compression.
 func GetPDF(pdfName string, imageName string) error {
-	// path := filepath.Join("../../input", pdfName)
+
 	absPath, err := os.Getwd()
 	if err != nil {
 		return err
@@ -95,8 +149,6 @@ func GetPDF(pdfName string, imageName string) error {
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 
-	// Must be *before* ReadImageFile
-	// Make sure our image is high quality
 	if err := mw.SetResolution(72, 72); err != nil {
 		return err
 	}
@@ -105,6 +157,8 @@ func GetPDF(pdfName string, imageName string) error {
 	if err := mw.ReadImage(Inpath); err != nil {
 		return err
 	}
+
+	mw.SetIteratorIndex(0)
 
 	log.Print("Converting ", pdfName, absPath)
 

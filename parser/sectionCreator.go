@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"encoding/json"
@@ -12,20 +12,21 @@ import (
 	"strings"
 )
 
-// SECTIONS Contains all generated sections
-var SECTIONS []Section
+// sections Contains all generated sections
+var sections []Section
 
-// CURRENT can't be capital for some reason
-var CURRENT Section
+// current can't be capital for some reason
+var current Section
 
-// META I like uppercase variables
-var META *LectureMeta
+// meta I like uppercase variables
+var meta *LectureMeta
 
 // Section is a Struct that holds the information about the current section.
 type Section struct {
 	ID           int               `json:"id"`
 	Voice        string            `json:"voice"`
 	FrameType    string            `json:"frameType"`
+	FrameSrc     string            `json:"frameSrc,omitempty"`
 	ResourceSrc  string            `json:"resourceSrc,omitempty"`
 	ResourceAttr map[string]string `json:"resourceAttr,omitempty"`
 	FrameFit     string            `json:"frameFit,omitempty"`
@@ -61,14 +62,14 @@ func handleSlide(tag xml.StartElement) {
 	if len(tag.Attr) == 0 {
 		log.Println("Ignoring <slide/> with no attr")
 	}
-	CURRENT.FrameType = "slide"
+	current.FrameType = "slide"
 	for _, attr := range tag.Attr {
 
 		if attr.Name.Local == "deck" {
 			// CURRENT.SlideDeck = attr.Value
-			for _, deck := range META.Deck {
+			for _, deck := range meta.Deck {
 				if deck.ID == attr.Value {
-					CURRENT.SlideDeck = deck
+					current.SlideDeck = deck
 				}
 			}
 		} else if attr.Name.Local == "page" {
@@ -80,11 +81,11 @@ func handleSlide(tag xml.StartElement) {
 
 			match, _ := regexp.MatchString("^[+|-][0-9]+$", attr.Value)
 			if match {
-				CURRENT.Page = CURRENT.Page + num
+				current.Page = current.Page + num
 			} else {
-				CURRENT.Page = num
+				current.Page = num
 			}
-			if CURRENT.Page < 0 {
+			if current.Page < 0 {
 				fmt.Println("Page Index is less than 0")
 			}
 		}
@@ -96,14 +97,14 @@ func handleImage(tag xml.StartElement) {
 		log.Println("Ignoring <image/> with no attr")
 	}
 
-	CURRENT.FrameType = "image"
+	current.FrameType = "image"
 
 	for _, attr := range tag.Attr {
 		if attr.Name.Local == "src" {
-			CURRENT.ResourceSrc = attr.Value
+			current.ResourceSrc = attr.Value
 		}
 		if attr.Name.Local == "fit" {
-			CURRENT.FrameFit = attr.Value
+			current.FrameFit = attr.Value
 		}
 	}
 }
@@ -113,7 +114,7 @@ func addResourceSection(tag xml.StartElement) {
 		log.Printf("Ignoring <%s/> with no attr\n", tag.Name.Local)
 	}
 
-	section := Section{ID: CURRENT.ID}
+	section := Section{ID: current.ID}
 	section.ResourceAttr = make(map[string]string)
 
 	for _, attr := range tag.Attr {
@@ -122,14 +123,18 @@ func addResourceSection(tag xml.StartElement) {
 		}
 		section.ResourceAttr[attr.Name.Local] = attr.Value
 	}
+
 	if tag.Name.Local == "audio" {
 		section.FrameType = "audio"
+		if _, exists := section.ResourceAttr["frameSrc"]; !exists {
+			section.ResourceAttr["frameSrc"] = current.ResourceSrc
+		}
 	} else if tag.Name.Local == "video" {
 		section.FrameType = "video"
 	}
 
-	SECTIONS = append(SECTIONS, section)
-	CURRENT.ID = CURRENT.ID + 1
+	sections = append(sections, section)
+	current.ID = current.ID + 1
 
 }
 
@@ -154,36 +159,36 @@ func addSSMLSection(ssml string) {
 
 	ssml = fmt.Sprint("<speak>\n", ssml, "\n<speak/>")
 	section := Section{
-		ID:        CURRENT.ID,
-		Voice:     CURRENT.Voice,
-		FrameType: CURRENT.FrameType,
+		ID:        current.ID,
+		Voice:     current.Voice,
+		FrameType: current.FrameType,
 		SSML:      ssml,
 	}
 
-	switch CURRENT.FrameType {
+	switch current.FrameType {
 
 	case "slide":
-		section.SlideDeck = CURRENT.SlideDeck
-		section.Page = CURRENT.Page
+		section.SlideDeck = current.SlideDeck
+		section.Page = current.Page
 	case "image":
-		section.ResourceSrc = CURRENT.ResourceSrc
-		section.FrameFit = CURRENT.FrameFit
+		section.ResourceSrc = current.ResourceSrc
+		section.FrameFit = current.FrameFit
 	}
 	// j, _ := json.Marshal(section)
 	// fmt.Println(string(j))
-	SECTIONS = append(SECTIONS, section)
+	sections = append(sections, section)
 
-	CURRENT.ID = CURRENT.ID + 1
+	current.ID = current.ID + 1
 }
 
-func getSections(meta *LectureMeta, xmlPath string) (string, error) {
+func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 
 	// metajson, _ := json.Marshal(meta)
 	// fmt.Println(string(metajson))
 
-	META = meta
+	meta = metadata
 
-	CURRENT = Section{
+	current = Section{
 		ID:        1,
 		Voice:     meta.Settings.Voice,
 		FrameType: "slide",
@@ -193,7 +198,7 @@ func getSections(meta *LectureMeta, xmlPath string) (string, error) {
 
 	xmlFile, err := os.Open(xmlPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	defer xmlFile.Close()
 
@@ -229,12 +234,12 @@ func getSections(meta *LectureMeta, xmlPath string) (string, error) {
 	}
 
 	printSections()
-	return "", nil
+	return sections, nil
 }
 
 func printSections() {
 	fmt.Print("\n[")
-	for _, section := range SECTIONS {
+	for _, section := range sections {
 		j, _ := json.MarshalIndent(section, "", "	")
 		fmt.Print(string(j), ",\n")
 	}

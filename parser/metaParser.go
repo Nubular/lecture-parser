@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"encoding/xml"
@@ -47,6 +47,7 @@ type LectureMeta struct {
 	ActiveDeck Deck `json:"activeDeck"`
 }
 
+// Deck is a deck :p
 type Deck struct {
 	ID     string `xml:"id,attr" json:"-id,omitempty"`
 	Src    string `xml:"src,attr" json:"-src,omitempty"`
@@ -56,7 +57,7 @@ type Deck struct {
 /*
 @todo error checking for empty info and lexeme tags, along with checks for deck page numbers.
 */
-func getMeta(xmlPath string) (*LectureMeta, error) {
+func GetMeta(xmlPath string) (*LectureMeta, error) {
 
 	xmlFile, err := os.Open(xmlPath)
 	if err != nil {
@@ -69,7 +70,7 @@ func getMeta(xmlPath string) (*LectureMeta, error) {
 
 	var lecturemeta LectureMeta
 	if err := xml.Unmarshal(byteValue, &lecturemeta); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	for _, deck := range lecturemeta.Deck {
