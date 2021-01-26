@@ -73,9 +73,14 @@ func getFrames(inPath string, outPath string, sections []parser.Section) error {
 
 func start(xmlPath string, inPath string, outPath string) {
 
-	meta, err := parser.GetMeta(xmlPath)
+	config, err := loadConfig()
 	if err != nil {
 		log.Println(err)
+	}
+	fmt.Println(config)
+	meta, err := parser.GetMeta(xmlPath)
+	if err != nil {
+		log.Panic(err)
 	}
 	fmt.Println(meta)
 
