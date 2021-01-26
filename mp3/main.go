@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -53,17 +54,24 @@ func updateConfig(audiofile string) {
 }
 
 func main() {
-	err := createMP3(true)
+
+	absPath, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	outPath := filepath.Join(absPath, "output")
+
+	err = createMP3(`<speak>
+	Welcome to a short example that will demonstrate the basic features of the software.\r\n\r\nCurrently, slide 1 is set as the active slide deck.
+					<speak/>`, filepath.Join(outPath, "test.mp3"), true)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func createMP3(cacheFiles bool) error {
+func createMP3(ssml string, outPath string, cacheFiles bool) error {
 
-	fname := "slide3_1"
-	s := "Please read this mp3" //Text to be converted to speech
-	audiofile := fname + ".mp3"
 	//Creates session based on credentials & config present in .aws directory
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
@@ -77,7 +85,7 @@ func createMP3(cacheFiles bool) error {
 		//Making request to Polly
 		//Old code for 3000 characters - using synthesize speech
 		svc := polly.New(sess)
-		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(s), VoiceId: aws.String("Joanna")}
+		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(ssml), VoiceId: aws.String("Joanna")}
 		output, err := svc.SynthesizeSpeech(input)
 
 		if err != nil {
@@ -86,13 +94,13 @@ func createMP3(cacheFiles bool) error {
 		}
 
 		//create file
-		name := audiofile
-		outFile, err := os.Create(name)
+		outFile, err := os.Create(outPath)
 		if err != nil {
-			log.Panic("Got error creating " + name + ":")
+			log.Panic("Got error creating " + outPath + ":")
 			return err
 		}
 		defer outFile.Close()
+
 		_, err = io.Copy(outFile, output.AudioStream)
 		if err != nil {
 			log.Panic("Got error saving MP3:")
