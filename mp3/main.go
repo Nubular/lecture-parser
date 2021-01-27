@@ -63,9 +63,13 @@ func main() {
 	outPath := filepath.Join(absPath, "output")
 
 	err = createMP3(`<speak>
-    You say, <phoneme alphabet="ipa" ph="pɪˈkɑːn">pecan</phoneme>. 
-    I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.
-</speak>`, filepath.Join(outPath, "test.mp3"), false)
+You can also write custom ssml which works with specific platforms!
+You say, <phoneme alphabet="ipa" ph="pɪˈkɑːn">pecan</phoneme>. 
+I say, <phoneme alphabet="ipa" ph="ˈpi.kæn">pecan</phoneme>.
+Sometimes it can be useful to <prosody volume="loud">increase the volume 
+for a specific speech.</prosody>
+ 
+</speak>`, filepath.Join(outPath, "test2.mp3"), true)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -86,25 +90,25 @@ func createMP3(ssml string, outPath string, cacheFiles bool) error {
 		//Making request to Polly
 		//Old code for 3000 characters - using synthesize speech
 		svc := polly.New(sess)
-		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(ssml), TextType : aws.String("ssml"),VoiceId: aws.String("Joanna")}
+		input := &polly.SynthesizeSpeechInput{OutputFormat: aws.String("mp3"), Text: aws.String(ssml), TextType: aws.String("ssml"), VoiceId: aws.String("Joanna")}
 		output, err := svc.SynthesizeSpeech(input)
 
 		if err != nil {
-			log.Panic("Got error calling SynthesizeSpeech:", err)
+			log.Println("Got error calling SynthesizeSpeech:", err)
 			return err
 		}
 
 		//create file
 		outFile, err := os.Create(outPath)
 		if err != nil {
-			log.Panic("Got error creating " + outPath + ":")
+			log.Println("Got error creating " + outPath + ":")
 			return err
 		}
 		defer outFile.Close()
 
 		_, err = io.Copy(outFile, output.AudioStream)
 		if err != nil {
-			log.Panic("Got error saving MP3:")
+			log.Println("Got error saving MP3:")
 			return err
 		}
 	}

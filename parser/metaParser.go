@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/xml"
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -70,7 +69,7 @@ func GetMeta(xmlPath string) (*LectureMeta, error) {
 
 	var lecturemeta LectureMeta
 	if err := xml.Unmarshal(byteValue, &lecturemeta); err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
 	for _, deck := range lecturemeta.Deck {

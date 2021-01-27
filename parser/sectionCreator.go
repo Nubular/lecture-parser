@@ -23,10 +23,14 @@ var meta *LectureMeta
 
 // Section is a Struct that holds the information about the current section.
 type Section struct {
-	ID           int               `json:"id"`
-	Voice        string            `json:"voice"`
-	FrameType    string            `json:"frameType"`
-	FrameSrc     string            `json:"frameSrc,omitempty"`
+	ID        int    `json:"id"`
+	Voice     string `json:"voice"`
+	FrameType string `json:"frameType"`
+	FrameSrc  struct {
+		ImageSrc string `json:"imageSrc,omitempty"`
+		AudioSrc string `json:"audioSrc,omitempty"`
+		VideoSrc string `json:"videoSrc,omitempty"`
+	} `json:"frameSrc,omitempty"`
 	ResourceSrc  string            `json:"resourceSrc,omitempty"`
 	ResourceAttr map[string]string `json:"resourceAttr,omitempty"`
 	FrameFit     string            `json:"frameFit,omitempty"`
@@ -98,8 +102,10 @@ func handleImage(tag xml.StartElement) {
 	}
 
 	current.FrameType = "image"
+	current.ResourceAttr = make(map[string]string)
 
 	for _, attr := range tag.Attr {
+		current.ResourceAttr[attr.Name.Local] = attr.Value
 		if attr.Name.Local == "src" {
 			current.ResourceSrc = attr.Value
 		}
@@ -173,6 +179,7 @@ func addSSMLSection(ssml string) {
 	case "image":
 		section.ResourceSrc = current.ResourceSrc
 		section.FrameFit = current.FrameFit
+		section.ResourceAttr = current.ResourceAttr
 	}
 	// j, _ := json.Marshal(section)
 	// fmt.Println(string(j))
@@ -198,7 +205,8 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 
 	xmlFile, err := os.Open(xmlPath)
 	if err != nil {
-		log.Panic(err)
+		log.Println("Error opening XML: ", xmlPath)
+		return nil, err
 	}
 	defer xmlFile.Close()
 
@@ -233,7 +241,7 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 		end = decoder.InputOffset()
 	}
 
-	printSections()
+	// printSections()
 	return sections, nil
 }
 

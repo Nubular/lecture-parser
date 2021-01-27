@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -16,7 +15,7 @@ type Config struct {
 func loadConfig() (*Config, error) {
 	absPath, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	configFile, err := os.Open(filepath.Join(absPath, ".config/config.json"))

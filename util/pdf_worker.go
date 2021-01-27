@@ -1,4 +1,4 @@
-package extractor
+package util
 
 import (
 	"log"
@@ -21,8 +21,8 @@ func main() {
 
 // Frame defines the page and it's imageName
 type Frame struct {
-	Page      int    `json:"page"`
-	ImageName string `json:"imageName"`
+	Page     int    `json:"page"`
+	FileName string `json:"imageName"`
 }
 
 // GetPDFPage extracts the specified page number from the supplied file
@@ -116,10 +116,10 @@ func GetPDFPages(inPath string, outPath string, frames []Frame) error {
 		// 	return err
 		// }
 
-		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.ImageName))
+		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.FileName))
 
 		// Save File
-		err = mw.WriteImage(filepath.Join(outPath, frame.ImageName))
+		err = mw.WriteImage(filepath.Join(outPath, frame.FileName))
 
 	}
 	return err
