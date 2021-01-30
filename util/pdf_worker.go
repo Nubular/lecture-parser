@@ -9,20 +9,21 @@ import (
 )
 
 // Implement max page count using pdfinfo
-func main() {
+// func main() {
 
-	pdfName := "test.pdf"
-	imageName := "test.jpg"
+// 	pdfName := "test.pdf"
+// 	imageName := "test.jpg"
 
-	if err := GetPDF(pdfName, imageName); err != nil {
-		log.Fatal(err)
-	}
-}
+// 	if err := GetPDF(pdfName, imageName); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 // Frame defines the page and it's imageName
 type Frame struct {
 	Page     int    `json:"page"`
 	FileName string `json:"imageName"`
+	SSML     string `json:"ssml"`
 }
 
 // GetPDFPage extracts the specified page number from the supplied file

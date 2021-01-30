@@ -163,7 +163,7 @@ func addSSMLSection(ssml string) {
 		return
 	}
 
-	ssml = fmt.Sprint("<speak>\n", ssml, "\n<speak/>")
+	ssml = fmt.Sprintf("<speak>\n %s \n<speak/>", ssml)
 	section := Section{
 		ID:        current.ID,
 		Voice:     current.Voice,
