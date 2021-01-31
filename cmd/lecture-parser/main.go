@@ -6,13 +6,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
 
 	"github.com/nubular/lecture-parser/parser"
 )
 
 var sections []parser.Section
 var config Config
+
+// @todo having an image tag followed by an audio tag could cause a crash
 
 func main() {
 	// if err := extractor.GetPDFPage("slides1.pdf", "image.jpeg", 1); err != nil {
@@ -35,6 +36,7 @@ func printSections() {
 	fmt.Print("\n[")
 	for _, section := range sections {
 		j, _ := json.MarshalIndent(section, "", "	")
+		// fmt.Println(unsafe.Sizeof(section))
 		fmt.Print(string(j), ",\n")
 	}
 	fmt.Print("]\n")
@@ -51,9 +53,8 @@ func start(xmlPath string, inPath string, outPath string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(meta)
-	yee := fmt.Sprintf("<does this print>")
-	fmt.Println(yee, reflect.TypeOf(yee))
+	// fmt.Println(meta)
+
 	sections, err = parser.GetSections(meta, xmlPath)
 	if err != nil {
 		log.Panic(err)
@@ -68,6 +69,11 @@ func start(xmlPath string, inPath string, outPath string) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	printSections()
+	err = getClips(inPath, outPath)
+	if err != nil {
+		log.Panic(err)
+	}
 	serializeSections(outPath)
-	// printSections()
 }

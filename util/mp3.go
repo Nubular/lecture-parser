@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/polly"
+	"github.com/nubular/lecture-parser/parser"
 )
 
 type Config struct {
@@ -82,7 +83,7 @@ func ttsPolly(ssml string, outPath string, svc *polly.Polly) error {
 }
 
 // CreateMP3 creates the tts mp3
-func CreateMP3(outPath string, ssmlFrames []Frame, cacheFiles bool) error {
+func CreateMP3(outPath string, ssmlFrames []parser.Section, cacheFiles bool) error {
 
 	if _, err := os.Stat(outPath); os.IsNotExist(err) {
 		log.Println("Output dir not found. Creating at ", outPath)
@@ -106,7 +107,7 @@ func CreateMP3(outPath string, ssmlFrames []Frame, cacheFiles bool) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for _, frame := range ssmlFrames {
-		ssmlOutPath := filepath.Join(outPath, frame.FileName)
+		ssmlOutPath := filepath.Join(outPath, frame.FrameSrc.AudioSrc)
 		wg.Add(1)
 		go func(ssml string, audioOutPath string) {
 			defer wg.Done()
@@ -115,9 +116,9 @@ func CreateMP3(outPath string, ssmlFrames []Frame, cacheFiles bool) error {
 				return
 			default:
 			}
-			log.Println("Done Writing to ", audioOutPath)
 			err := ttsPolly(ssml, audioOutPath, svc)
 
+			log.Println("Done Writing to ", audioOutPath)
 			if err != nil {
 				log.Println(err)
 				cancel()

@@ -12,7 +12,7 @@ import (
 	"github.com/nubular/lecture-parser/util"
 )
 
-func checkDupPage(frames []util.Frame, page int) bool {
+func checkDupPage(frames []parser.Section, page int) bool {
 	for _, frame := range frames {
 		if frame.Page == page {
 			return true
@@ -21,6 +21,7 @@ func checkDupPage(frames []util.Frame, page int) bool {
 	return false
 }
 
+// @todo delete sections of images which don't have ssml or audio
 func getFrames(inPath string, outPath string) error {
 
 	if len(sections) == 0 {
@@ -28,35 +29,48 @@ func getFrames(inPath string, outPath string) error {
 	}
 
 	// map from filename to array of frames to be extracted.
-	slides := make(map[string][]util.Frame)
-	images := make([]util.Frame, 0)
-	video := make([]util.Frame, 0)
-
+	slides := make(map[string][]parser.Section)
+	images := make([]parser.Section, 0)
+	video := make([]parser.Section, 0)
+	prevFramePath := ""
+	// Folders the correspondng media can go in. Use empty string if no subfolder to be made
+	imageFolder := "FRAMES"
+	videoFolder := "CLIPS"
 	for i, section := range sections {
 
 		if section.FrameType == "slide" {
+			// check if map has been made, if not then make it
 			if _, exists := slides[section.SlideDeck.Src]; !exists {
-				slides[section.SlideDeck.Src] = make([]util.Frame, 0)
+				slides[section.SlideDeck.Src] = make([]parser.Section, 0)
 			}
 			if checkDupPage(slides[section.SlideDeck.Src], section.Page) {
 				continue
 			}
 			filename := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
-			frame := util.Frame{FileName: filename, Page: section.Page}
 
 			sections[i].FrameSrc.ImageSrc = filename
 
-			slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], frame)
+			slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], sections[i])
+			prevFramePath = sections[i].FrameSrc.ImageSrc
 		} else if section.FrameType == "image" {
-			filename := section.ResourceSrc
-			sections[i].FrameSrc.ImageSrc = filename
-			images = append(images, util.Frame{FileName: filename})
+			sections[i].FrameSrc.ImageSrc = section.ResourceSrc
+			images = append(images, sections[i])
+
+			prevFramePath = sections[i].FrameSrc.ImageSrc
 
 		} else if section.FrameType == "video" {
 
-			filename := section.ResourceSrc
-			sections[i].FrameSrc.VideoSrc = filename
-			video = append(video, util.Frame{FileName: filename})
+			sections[i].FrameSrc.VideoSrc = section.ResourceSrc
+			video = append(video, sections[i])
+		} else if section.FrameType == "audio" {
+			// I could take the previous frame displayed, but this way if you have a slide or image (with no corresponding ssml,
+			//doesn't generate a section) followed by an audio tag it'll display stuff correctly
+			// filename := section.ResourceAttr["frameSrc"]
+			if section.ResourceAttr["frameSrc"] != "" {
+				sections[i].FrameSrc.ImageSrc = section.ResourceAttr["frameSrc"]
+			} else {
+				sections[i].FrameSrc.ImageSrc = prevFramePath
+			}
 		} else {
 			log.Println("Unidentified Section Type: ", section.FrameType)
 		}
@@ -71,17 +85,24 @@ func getFrames(inPath string, outPath string) error {
 			return err
 		}
 	}
-
-	err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, "FRAMES"), images)
-	if err != nil {
-		return err
+	if len(images) != 0 {
+		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, imageFolder), images)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any images to be transferred")
 	}
 
-	err = util.AsyncCopyFrames(inPath, filepath.Join(outPath, "CLIPS"), video)
-	if err != nil {
-		return err
-	}
+	if len(video) != 0 {
 
+		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, videoFolder), video)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any videos to be transferred")
+	}
 	return nil
 }
 
@@ -91,47 +112,92 @@ func getAudio(inPath string, outPath string) error {
 		return errors.New("No sections received")
 	}
 
-	ssml := make([]util.Frame, 0)
-	audio := make([]util.Frame, 0)
-
+	ssml := make([]parser.Section, 0)
+	audio := make([]parser.Section, 0)
+	// Folder the corresponding media goes in.
+	audioFolder := "AUDIO"
 	for i, section := range sections {
 
 		if section.FrameType == "slide" {
-			filename := fmt.Sprintf("%s_%d.mp3", section.SlideDeck.ID, section.ID)
-			frame := util.Frame{FileName: filename, SSML: section.SSML}
+			filename := fmt.Sprintf("%03d.mp3", section.ID)
 
 			sections[i].FrameSrc.AudioSrc = filename
 
-			ssml = append(ssml, frame)
+			ssml = append(ssml, sections[i])
+
+		} else if section.FrameType == "image" {
+			filename := fmt.Sprintf("%03d.mp3", section.ID)
+
+			sections[i].FrameSrc.AudioSrc = filename
+
+			ssml = append(ssml, sections[i])
+
 		} else if section.FrameType == "audio" {
 
-			// I could take the previous frame displayed, but this way if you have a slide or image (with no corresponding ssml,
-			//doesn't generate a section) followed by an audio tag it'll display stuff correctly
-			filename := section.ResourceAttr["frameSrc"]
-			sections[i].FrameSrc.ImageSrc = filename
-
-			audio = append(audio, util.Frame{FileName: filename})
-
+			sections[i].FrameSrc.AudioSrc = section.ResourceSrc
+			audio = append(audio, sections[i])
 		}
 	}
-	err := util.CreateMP3(filepath.Join(outPath, "AUDIO"), ssml, config.CacheFiles)
-	if err != nil {
-		return err
+	if len(ssml) != 0 {
+		err := util.CreateMP3(filepath.Join(outPath, audioFolder), ssml, config.CacheFiles)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any ssml to be generated")
 	}
-	err = util.AsyncCopyFrames(inPath, filepath.Join(outPath, "AUDIO"), audio)
-	if err != nil {
-		return err
+	if len(audio) != 0 {
+		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, audioFolder), audio)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any audio files to be transferred")
 	}
 	return nil
 }
 
 func serializeSections(outPath string) error {
-	type sectionFile struct {
-		yee []parser.Section `json:"yee"`
-	}
-
 	toWrite, _ := json.Marshal(sections)
 	jsonPath := filepath.Join(outPath, "sections.json")
 	return ioutil.WriteFile(jsonPath, toWrite, 0644)
 
+}
+
+func getClips(inPath string, outPath string) error {
+
+	if len(sections) == 0 {
+		return errors.New("No sections received")
+	}
+	// Folder the corresponding media goes in
+	imageFolder := "FRAMES"
+	audioFolder := "AUDIO"
+	videoFolder := "CLIPS"
+
+	clips := make([]parser.Section, 0)
+
+	for i, section := range sections {
+		switch section.FrameType {
+		case "slide", "audio", "image":
+			filename := fmt.Sprintf("%03d.mp4", section.ID)
+
+			sections[i].FrameSrc.VideoSrc = filename
+			clips = append(clips, sections[i])
+		case "video":
+
+		default:
+			log.Printf("Ignoring Unidentified section of type %s\n", section.FrameType)
+		}
+
+	}
+
+	if len(clips) == 0 {
+		log.Println("Could not identify any clips to be created")
+		return nil
+	}
+	err := util.AsyncCombineImageAudio(inPath, outPath, imageFolder, audioFolder, videoFolder, clips)
+	if err != nil {
+		return err
+	}
+	return nil
 }

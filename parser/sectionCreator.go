@@ -131,6 +131,7 @@ func addResourceSection(tag xml.StartElement) {
 	}
 
 	if tag.Name.Local == "audio" {
+
 		section.FrameType = "audio"
 		if _, exists := section.ResourceAttr["frameSrc"]; !exists {
 			section.ResourceAttr["frameSrc"] = current.ResourceSrc
@@ -163,7 +164,7 @@ func addSSMLSection(ssml string) {
 		return
 	}
 
-	ssml = fmt.Sprintf("<speak>\n %s \n<speak/>", ssml)
+	ssml = fmt.Sprintf("<speak>\n %s \n</speak>", ssml)
 	section := Section{
 		ID:        current.ID,
 		Voice:     current.Voice,

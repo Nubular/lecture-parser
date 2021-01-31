@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/nubular/lecture-parser/parser"
 )
 
 func copyFile(frameInPath, frameOutPath string) (int64, error) {
@@ -40,21 +42,28 @@ func copyFile(frameInPath, frameOutPath string) (int64, error) {
 
 // AsyncCopyFrames copies all files in the FileName Field in the Frame struct
 // https://gist.github.com/lucassha/9ffd60225790bdf071e7969e91cbbdb5
-func AsyncCopyFrames(inPath, outPath string, frames []Frame) error {
+func AsyncCopyFrames(inPath, outPath string, frames []parser.Section) error {
 
 	if _, err := os.Stat(outPath); os.IsNotExist(err) {
 		log.Println("Output dir not found. Creating at ", outPath)
 		os.Mkdir(outPath, os.ModePerm)
 	}
+
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for _, frame := range frames {
-		frameInPath := filepath.Join(inPath, frame.FileName)
-		frameOutPath := filepath.Join(outPath, frame.FileName)
+		fileSrc := frame.FrameSrc.ImageSrc
+		if frame.FrameType == "video" {
+			fileSrc = frame.FrameSrc.VideoSrc
+		} else if frame.FrameType == "audio" {
+			fileSrc = frame.FrameSrc.AudioSrc
+		}
+		frameInPath := filepath.Join(inPath, fileSrc)
+		frameOutPath := filepath.Join(outPath, fileSrc)
 		wg.Add(1)
 
-		go func(frameInPath, frameOutPath string) {
+		go func(frameInPath, frameOutPath string, frame parser.Section) {
 			defer wg.Done()
 			select {
 			case <-ctx.Done():
@@ -63,12 +72,12 @@ func AsyncCopyFrames(inPath, outPath string, frames []Frame) error {
 			}
 			_, err := copyFile(frameInPath, frameOutPath)
 			if err != nil {
-				log.Println(err)
+				log.Println(err, frame)
 				cancel()
 				return
 			}
 			// log.Println("Done Writing to ", frameOutPath)
-		}(frameInPath, frameOutPath)
+		}(frameInPath, frameOutPath, frame)
 
 	}
 	wg.Wait()

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/nubular/lecture-parser/parser"
 	"gopkg.in/gographics/imagick.v3/imagick"
 )
 
@@ -21,9 +22,11 @@ import (
 
 // Frame defines the page and it's imageName
 type Frame struct {
-	Page     int    `json:"page"`
-	FileName string `json:"imageName"`
-	SSML     string `json:"ssml"`
+	Page      int    `json:"page"`
+	FileName  string `json:"imageName"`
+	SSML      string `json:"ssml"`
+	ImagePath string `json:"imagePath"`
+	AudioPath string `json:"audioPath"`
 }
 
 // GetPDFPage extracts the specified page number from the supplied file
@@ -62,7 +65,7 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 	log.Print("Converting ", pdfName, absPath)
 
 	// Set any compression (100 = max quality)
-	if err := mw.SetCompressionQuality(50); err != nil {
+	if err := mw.SetCompressionQuality(100); err != nil {
 		return err
 	}
 
@@ -76,7 +79,7 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 }
 
 //GetPDFPages extracts the pages in the supplied array
-func GetPDFPages(inPath string, outPath string, frames []Frame) error {
+func GetPDFPages(inPath string, outPath string, frames []parser.Section) error {
 
 	if _, err := os.Stat(outPath); os.IsNotExist(err) {
 		log.Println("Output dir not found. Creating at ", outPath)
@@ -89,9 +92,9 @@ func GetPDFPages(inPath string, outPath string, frames []Frame) error {
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 
-	// if err := mw.SetResolution(100, 100); err != nil {
-	// 	return err
-	// }
+	if err := mw.SetResolution(100, 100); err != nil {
+		return err
+	}
 
 	// Load the image file into imagick
 	if err := mw.ReadImage(inPath); err != nil {
@@ -117,10 +120,10 @@ func GetPDFPages(inPath string, outPath string, frames []Frame) error {
 		// 	return err
 		// }
 
-		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.FileName))
+		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.FrameSrc.ImageSrc))
 
 		// Save File
-		err = mw.WriteImage(filepath.Join(outPath, frame.FileName))
+		err = mw.WriteImage(filepath.Join(outPath, frame.FrameSrc.ImageSrc))
 
 	}
 	return err
