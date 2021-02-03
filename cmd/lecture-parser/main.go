@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	inPath := filepath.Join(absPath, "input")
+	inPath := filepath.Join(absPath, "altInput")
 	outPath := filepath.Join(absPath, "output")
 	xmlPath := filepath.Join(inPath, "simple_lec.xml")
 
@@ -60,6 +60,7 @@ func start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
+	printSections()
 	err = getFrames(inPath, outPath)
 	if err != nil {
 		log.Panic(err)
@@ -70,7 +71,6 @@ func start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
-	printSections()
 	err = getClips(inPath, outPath)
 	if err != nil {
 		log.Panic(err)

@@ -12,6 +12,11 @@ import (
 	"strings"
 )
 
+// handle various attributes in tags missing
+// if slide is switched and page number is not specified shows page 0.
+// no page number bound checking
+// handle comments
+
 // sections Contains all generated sections
 var sections []Section
 
@@ -51,7 +56,7 @@ func customTag(tag string) bool {
 }
 
 func infoTag(tag string) bool {
-	ignore := []string{"info", "settings", "deck"}
+	ignore := []string{"info", "settings", "deck", "lecture"}
 	flag := false
 	for _, element := range ignore {
 		if tag == element {
@@ -70,10 +75,13 @@ func handleSlide(tag xml.StartElement) {
 	for _, attr := range tag.Attr {
 
 		if attr.Name.Local == "deck" {
-			// CURRENT.SlideDeck = attr.Value
+			if current.SlideDeck.ID == attr.Value {
+				continue
+			}
 			for _, deck := range meta.Deck {
 				if deck.ID == attr.Value {
 					current.SlideDeck = deck
+					current.Page = 0
 				}
 			}
 		} else if attr.Name.Local == "page" {
@@ -191,9 +199,6 @@ func addSSMLSection(ssml string) {
 
 func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 
-	// metajson, _ := json.Marshal(meta)
-	// fmt.Println(string(metajson))
-
 	meta = metadata
 
 	current = Section{
@@ -223,6 +228,9 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 		if err != nil {
 			break
 		}
+		s := string(byteValue)[start:end]
+		s = strings.ReplaceAll(s, "\n", `\n`)
+		fmt.Println(s, start, end)
 		switch se := t.(type) {
 		case xml.StartElement:
 			// Ignore any tags that might belong to ssml
@@ -231,10 +239,17 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 				if !infoTag(se.Name.Local) {
 					addSSMLSection(string(byteValue)[start:end])
 				}
-
 				handleControlTag(se)
 
-				start = end
+				start = decoder.InputOffset()
+			}
+		case xml.EndElement:
+			if customTag(se.Name.Local) {
+				// handle closing lecture tag.
+				if se.Name.Local == "lecture" {
+					addSSMLSection(string(byteValue)[start:end])
+				}
+
 				start = decoder.InputOffset()
 			}
 
@@ -242,7 +257,6 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 		end = decoder.InputOffset()
 	}
 
-	// printSections()
 	return sections, nil
 }
 

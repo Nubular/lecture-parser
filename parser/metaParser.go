@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -65,13 +66,18 @@ func GetMeta(xmlPath string) (*LectureMeta, error) {
 	defer xmlFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(xmlFile)
-	_ = byteValue
 
 	var lecturemeta LectureMeta
 	if err := xml.Unmarshal(byteValue, &lecturemeta); err != nil {
 		return nil, err
 	}
 
+	// Rejects script of not deck specified. Improve later.
+	if len(lecturemeta.Deck) == 0 {
+		return nil, fmt.Errorf("No Deck supplied")
+	}
+
+	lecturemeta.ActiveDeck = lecturemeta.Deck[0]
 	for _, deck := range lecturemeta.Deck {
 		if deck.Active {
 			lecturemeta.ActiveDeck = deck
