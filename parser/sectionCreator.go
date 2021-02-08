@@ -13,9 +13,7 @@ import (
 )
 
 // handle various attributes in tags missing
-// if slide is switched and page number is not specified shows page 0.
 // no page number bound checking
-// handle comments
 
 // sections Contains all generated sections
 var sections []Section
@@ -81,7 +79,7 @@ func handleSlide(tag xml.StartElement) {
 			for _, deck := range meta.Deck {
 				if deck.ID == attr.Value {
 					current.SlideDeck = deck
-					current.Page = 0
+					current.Page = 1
 				}
 			}
 		} else if attr.Name.Local == "page" {
@@ -230,7 +228,6 @@ func GetSections(metadata *LectureMeta, xmlPath string) ([]Section, error) {
 		}
 		s := string(byteValue)[start:end]
 		s = strings.ReplaceAll(s, "\n", `\n`)
-		fmt.Println(s, start, end)
 		switch se := t.(type) {
 		case xml.StartElement:
 			// Ignore any tags that might belong to ssml

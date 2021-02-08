@@ -10,11 +10,11 @@ import (
 	"github.com/nubular/lecture-parser/parser"
 )
 
+// @TODO: Remove these and use pointers instead
 var sections []parser.Section
 var config Config
 
-// @todo having an image tag followed by an audio tag could cause a crash
-
+// check for existence of files, extract file metadata (length of video, number of pages). Convert external videos to usable format.
 func main() {
 	// if err := extractor.GetPDFPage("slides1.pdf", "image.jpeg", 1); err != nil {
 	// 	log.Fatal(err)
@@ -60,7 +60,7 @@ func start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
-	printSections()
+	// printSections()
 	err = getFrames(inPath, outPath)
 	if err != nil {
 		log.Panic(err)
