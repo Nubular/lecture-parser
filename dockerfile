@@ -30,6 +30,8 @@ RUN apt-get update \
    && rm -rf /var/lib/apt/lists/*g
 
 
+# use latest version, don't build manually. Comment out the gs rights="none" line
+
 ENV IMAGEMAGICK_VERSION=7.0.8-11
 
 RUN cd && \
