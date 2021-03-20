@@ -43,6 +43,10 @@ func printSections() {
 }
 
 func start(xmlPath string, inPath string, outPath string) {
+
+
+	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+
 	var err error
 	config, err = loadConfig()
 	if err != nil {

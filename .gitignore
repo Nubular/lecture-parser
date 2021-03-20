@@ -18,5 +18,7 @@
 input/
 output/
 altInput/
-
+highlight/FRAMES/
+*.pb
+*.tar.gz
 .vscode/
