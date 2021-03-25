@@ -26,10 +26,11 @@ var meta *LectureMeta
 
 // Section is a Struct that holds the information about the current section.
 type Section struct {
-	ID        int    `json:"id"`
-	Voice     string `json:"voice"`
-	FrameType string `json:"frameType"`
-	FrameSrc  struct {
+	ID           int    `json:"id"`
+	Voice        string `json:"voice"`
+	FrameType    string `json:"frameType"`
+	FrameSubType string `json:"frameSubType,omitempty"`
+	FrameSrc     struct {
 		ImageSrc string `json:"imageSrc,omitempty"`
 		AudioSrc string `json:"audioSrc,omitempty"`
 		VideoSrc string `json:"videoSrc,omitempty"`
@@ -43,7 +44,7 @@ type Section struct {
 }
 
 func customTag(tag string) bool {
-	ignore := []string{"info", "settings", "deck", "slide", "audio", "image", "video", "lecture"}
+	ignore := []string{"info", "settings", "deck", "slide", "highlight", "audio", "image", "video", "lecture"}
 	flag := false
 	for _, element := range ignore {
 		if tag == element {
@@ -70,8 +71,12 @@ func handleSlide(tag xml.StartElement) {
 		log.Println("Ignoring <slide/> with no attr")
 	}
 	current.FrameType = "slide"
+	log.Println(tag.Name, tag.Name.Local)
+	if tag.Name.Local == "highlight" {
+		current.FrameSubType = "highlight"
+	}
+	current.ResourceAttr = make(map[string]string)
 	for _, attr := range tag.Attr {
-
 		if attr.Name.Local == "deck" {
 			if current.SlideDeck.ID == attr.Value {
 				continue
@@ -99,6 +104,7 @@ func handleSlide(tag xml.StartElement) {
 				fmt.Println("Page Index is less than 0")
 			}
 		}
+		current.ResourceAttr[attr.Name.Local] = attr.Value
 	}
 }
 
@@ -154,7 +160,7 @@ func addResourceSection(tag xml.StartElement) {
 func handleControlTag(tag xml.StartElement) {
 	switch tag.Name.Local {
 
-	case "slide":
+	case "slide", "highlight":
 		handleSlide(tag)
 	case "audio", "video":
 		addResourceSection(tag)
@@ -183,6 +189,9 @@ func addSSMLSection(ssml string) {
 	case "slide":
 		section.SlideDeck = current.SlideDeck
 		section.Page = current.Page
+		// Attributes don't carry over between tags.
+		section.FrameSubType = current.FrameSubType
+		section.ResourceAttr = current.ResourceAttr
 	case "image":
 		section.ResourceSrc = current.ResourceSrc
 		section.FrameFit = current.FrameFit

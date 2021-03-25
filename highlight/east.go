@@ -12,6 +12,11 @@ import (
 	"gocv.io/x/gocv"
 )
 
+// type pt struct {
+// 	x float32
+// 	y float32
+// }
+
 func resize_image_blob(src gocv.Mat, max_side_len float64) (gocv.Mat, float64, float64) {
 	h := float64(src.Size()[0])
 	w := float64(src.Size()[1])
@@ -49,11 +54,10 @@ func east(detector gocv.Net, blob gocv.Mat, inpWidth int, inpHeight int) []gocv.
 	detector.SetInput(blob, "")
 
 	return detector.ForwardLayers(outNames)
-	// return detector.Forward("")
 }
 
 // https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html
-func decodeBoundingBoxes(scores, geometry gocv.Mat, scoreThresh int) {
+func decodeBoundingBoxes(scores, geometry gocv.Mat, scoreThresh float32) {
 	// dim := geometry.Size()[1]
 	height := scores.Size()[2]
 	width := scores.Size()[3]
@@ -62,28 +66,38 @@ func decodeBoundingBoxes(scores, geometry gocv.Mat, scoreThresh int) {
 		conf := make([]float32, 0)
 		for j := 0; j < width; j++ {
 			scoresData := scores.GetFloatAt(0, i*width+j)
-			// x0_data := geometry.GetFloatAt(0, i*width+j)
-			// x1_data := geometry.GetFloatAt(0, height*width+i*width+j)
-			// x2_data := geometry.GetFloatAt(0, height*width*2+i*width+j)
-			// x3_data := geometry.GetFloatAt(0, height*width*3+i*width+j)
-			// angles_data := geometry.GetFloatAt(0, height*width*4+i*width+j)
-
+			x0_data := geometry.GetFloatAt(0, i*width+j)
+			x1_data := geometry.GetFloatAt(0, height*width+i*width+j)
+			x2_data := geometry.GetFloatAt(0, height*width*2+i*width+j)
+			x3_data := geometry.GetFloatAt(0, height*width*3+i*width+j)
+			angle := geometry.GetFloatAt(0, height*width*4+i*width+j)
 			// log.Printf("[%f %f %f %f %f %f]", scoresData, x0_data, x1_data, x2_data, x3_data, angles_data)
 			conf = append(conf, scoresData)
-			// 	score := scoresData[j]
 
-			// 	if score < scoreThresh {
-			// 		continue
-			// 	}
+			if scoresData < scoreThresh {
+				continue
+			}
 
-			// 	offset_x := j * 4
-			// 	offset_y := i * 4
-			// 	angle := angles_data[j]
+			offset_x := float32(j * 4)
+			offset_y := float32(i * 4)
 
-			// 	cosA := math.Cos(angle)
-			// 	sinA := math.Sin(angle)
+			cosA := math.Cos(float64(angle))
+			sinA := math.Sin(float64(angle))
+			h := x0_data + x2_data
+			w := x1_data + x3_data
+
+			offset_0 := offset_x + float32(cosA)*x1_data + float32(sinA)*x2_data
+			offset_1 := offset_y - float32(sinA)*x1_data + float32(cosA)*x2_data
+
+			x0 := -float32(sinA)*h + offset_0
+			y0 := -float32(cosA)*h + offset_1
+			x1 := -float32(cosA)*w + offset_0
+			y1 := float32(sinA)*w + offset_1
+			// fmt.Printf("%f %f %f %f [(%f, %f),(%f, %f)]\n", offset_x, offset_y, cosA, sinA, x0, y0, x1, y1)
+			// return
+			fmt.Printf("[(%f, %f),(%f, %f)]\n", x0, y0, x1, y1)
 		}
-		fmt.Println(conf)
+		// fmt.Println(conf)
 	}
 	// yee, _ := geometry.DataPtrFloat32()
 	// fmt.Println(yee)
@@ -137,7 +151,7 @@ func main() {
 	scores := outs[0]
 	geometry := outs[1]
 	log.Println(scores.Size(), geometry.Size())
-	decodeBoundingBoxes(scores, geometry, 0)
+	decodeBoundingBoxes(scores, geometry, 0.5)
 }
 
 func performDetection(frame *gocv.Mat, results gocv.Mat) {

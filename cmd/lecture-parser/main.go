@@ -25,9 +25,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	inPath := filepath.Join(absPath, "altInput")
+	inPath := filepath.Join(absPath, "input")
 	outPath := filepath.Join(absPath, "output")
-	xmlPath := filepath.Join(inPath, "simple_lec.xml")
+	xmlPath := filepath.Join(inPath, "example_lec.xml")
 
 	start(xmlPath, inPath, outPath)
 }
@@ -43,7 +43,6 @@ func printSections() {
 }
 
 func start(xmlPath string, inPath string, outPath string) {
-
 
 	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 
@@ -64,7 +63,8 @@ func start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
-	// printSections()
+	printSections()
+	return
 	err = getFrames(inPath, outPath)
 	if err != nil {
 		log.Panic(err)
