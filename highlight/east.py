@@ -201,9 +201,8 @@ def main():
     inpHeight = args.height
     modelDetector = args.model    
     scriptDir = os.path.dirname(__file__)
-    print(outPath)
     outputList = [int(x) for x in args.list]
-    if len(outputList) == 1:
+    if len(outputList) == 0:
         return
 
     printReference = args.generate_reference

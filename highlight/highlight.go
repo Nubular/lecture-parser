@@ -17,11 +17,9 @@ func highlightImage(imagePath string, points string, outPath string) error {
 	list := strings.Split(points, " ")
 	command := []string{"highlight/east.py", "--input", string(imagePath), "--output", string(outPath), "--list"}
 	command = append(command, list...)
-	log.Println(command)
 	cmd := exec.Command("python", command...)
 	// cmd := exec.Command("python", "test.py")
 	stdoutStderr, err := cmd.CombinedOutput()
-	log.Println(string(stdoutStderr))
 	if err != nil {
 		return fmt.Errorf("%s for image: %s and outPath %s", stdoutStderr, imagePath, outPath)
 	}
