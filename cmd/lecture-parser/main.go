@@ -16,9 +16,6 @@ var config Config
 
 // check for existence of files, extract file metadata (length of video, number of pages). Convert external videos to usable format.
 func main() {
-	// if err := extractor.GetPDFPage("slides1.pdf", "image.jpeg", 1); err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	absPath, err := os.Getwd()
 	if err != nil {
@@ -63,13 +60,13 @@ func start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
-	printSections()
-	return
+	// printSections()
 	err = getFrames(inPath, outPath)
 	if err != nil {
 		log.Panic(err)
 	}
-
+	printSections()
+	return
 	err = getAudio(inPath, outPath)
 	if err != nil {
 		log.Panic(err)

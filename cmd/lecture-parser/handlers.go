@@ -8,10 +8,12 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/nubular/lecture-parser/highlight"
 	"github.com/nubular/lecture-parser/parser"
 	"github.com/nubular/lecture-parser/util"
 )
 
+//:p
 func checkDupPage(frames []parser.Section, page int) bool {
 	for _, frame := range frames {
 		if frame.Page == page {
@@ -29,7 +31,9 @@ func getFrames(inPath string, outPath string) error {
 	}
 
 	// map from filename to array of frames to be extracted.
+
 	slides := make(map[string][]parser.Section)
+	highlightFrames := make([]parser.Section, 0)
 	images := make([]parser.Section, 0)
 	video := make([]parser.Section, 0)
 	prevFramePath := ""
@@ -43,15 +47,30 @@ func getFrames(inPath string, outPath string) error {
 			if _, exists := slides[section.SlideDeck.Src]; !exists {
 				slides[section.SlideDeck.Src] = make([]parser.Section, 0)
 			}
-			if checkDupPage(slides[section.SlideDeck.Src], section.Page) {
-				continue
+
+			if section.FrameSubType == "highlight" {
+
+				resourceName := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
+				// Need a better filename for highlighted slides
+				filename := fmt.Sprintf("%s_%d_[%s].jpg", section.SlideDeck.ID, section.Page, section.ResourceAttr["points"])
+
+				sections[i].ResourceAttr["srcImage"] = resourceName
+				sections[i].FrameSrc.ImageSrc = filename
+
+				highlightFrames = append(highlightFrames, sections[i])
+			} else {
+				prevFramePath = sections[i].FrameSrc.ImageSrc
+
+				filename := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
+
+				sections[i].FrameSrc.ImageSrc = filename
+				// Check if page already in list to be rendered
+				if checkDupPage(slides[section.SlideDeck.Src], section.Page) {
+					continue
+				}
+				slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], sections[i])
 			}
-			filename := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
 
-			sections[i].FrameSrc.ImageSrc = filename
-
-			slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], sections[i])
-			prevFramePath = sections[i].FrameSrc.ImageSrc
 		} else if section.FrameType == "image" {
 			sections[i].FrameSrc.ImageSrc = section.ResourceSrc
 			images = append(images, sections[i])
@@ -65,7 +84,6 @@ func getFrames(inPath string, outPath string) error {
 		} else if section.FrameType == "audio" {
 			// I could take the previous frame displayed, but this way if you have a slide or image (with no corresponding ssml,
 			//doesn't generate a section) followed by an audio tag it'll display stuff correctly
-			// filename := section.ResourceAttr["frameSrc"]
 			if section.ResourceAttr["frameSrc"] != "" {
 				sections[i].FrameSrc.ImageSrc = section.ResourceAttr["frameSrc"]
 			} else {
@@ -79,8 +97,8 @@ func getFrames(inPath string, outPath string) error {
 	// Make this more async Awaitey?
 	for src, frame := range slides {
 		srcPath := filepath.Join(inPath, src)
-		clipPath := filepath.Join(outPath, "FRAMES")
-		err := util.GetPDFPages(srcPath, clipPath, frame)
+		outPath := filepath.Join(outPath, "FRAMES")
+		err := util.GetPDFPages(srcPath, outPath, frame)
 		if err != nil {
 			return err
 		}
@@ -93,9 +111,17 @@ func getFrames(inPath string, outPath string) error {
 	} else {
 		log.Println("Could not identify any images to be transferred")
 	}
+	if len(highlightFrames) != 0 {
+		imageFolderPath := filepath.Join(outPath, "FRAMES")
+		err := highlight.AsyncHighlightImage(imageFolderPath, filepath.Join(outPath, imageFolder), highlightFrames)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any images to be transferred")
+	}
 
 	if len(video) != 0 {
-
 		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, videoFolder), video)
 		if err != nil {
 			return err
@@ -109,7 +135,7 @@ func getFrames(inPath string, outPath string) error {
 func getAudio(inPath string, outPath string) error {
 
 	if len(sections) == 0 {
-		return errors.New("No sections received")
+		return errors.New("no sections received")
 	}
 
 	ssml := make([]parser.Section, 0)

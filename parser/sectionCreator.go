@@ -104,7 +104,7 @@ func handleSlide(tag xml.StartElement) {
 				fmt.Println("Page Index is less than 0")
 			}
 		}
-		current.ResourceAttr[attr.Name.Local] = attr.Value
+		current.ResourceAttr[attr.Name.Local] = strings.TrimSpace(attr.Value)
 	}
 }
 
@@ -117,7 +117,7 @@ func handleImage(tag xml.StartElement) {
 	current.ResourceAttr = make(map[string]string)
 
 	for _, attr := range tag.Attr {
-		current.ResourceAttr[attr.Name.Local] = attr.Value
+		current.ResourceAttr[attr.Name.Local] = strings.TrimSpace(attr.Value)
 		if attr.Name.Local == "src" {
 			current.ResourceSrc = attr.Value
 		}
@@ -139,7 +139,7 @@ func addResourceSection(tag xml.StartElement) {
 		if attr.Name.Local == "src" {
 			section.ResourceSrc = attr.Value
 		}
-		section.ResourceAttr[attr.Name.Local] = attr.Value
+		section.ResourceAttr[attr.Name.Local] = strings.TrimSpace(attr.Value)
 	}
 
 	if tag.Name.Local == "audio" {
@@ -190,8 +190,11 @@ func addSSMLSection(ssml string) {
 		section.SlideDeck = current.SlideDeck
 		section.Page = current.Page
 		// Attributes don't carry over between tags.
-		section.FrameSubType = current.FrameSubType
-		section.ResourceAttr = current.ResourceAttr
+		if current.FrameSubType == "highlight" {
+			section.FrameSubType = current.FrameSubType
+			section.ResourceAttr = current.ResourceAttr
+			current.FrameSubType = ""
+		}
 	case "image":
 		section.ResourceSrc = current.ResourceSrc
 		section.FrameFit = current.FrameFit

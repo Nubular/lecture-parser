@@ -1,4 +1,4 @@
-package main
+package highlight
 
 import (
 	"fmt"
@@ -104,7 +104,7 @@ func decodeBoundingBoxes(scores, geometry gocv.Mat, scoreThresh float32) {
 
 }
 
-func main() {
+func pain() {
 	// confThreshold := 0.5
 	// nmsThreshold := 0.4
 	inpWidth := 320
