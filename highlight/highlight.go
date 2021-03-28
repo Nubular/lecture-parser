@@ -43,10 +43,8 @@ func AsyncHighlightImage(inPath, outPath string, frames []parser.Section) error 
 	for _, frame := range frames {
 		resourceSrc := frame.ResourceAttr["srcImage"]
 		fileSrc := frame.FrameSrc.ImageSrc
-		print(fileSrc)
 		frameInPath := filepath.Join(inPath, resourceSrc)
 		frameOutPath := filepath.Join(outPath, fileSrc)
-		log.Println(frameInPath, frameOutPath)
 		points := frame.ResourceAttr["points"]
 		wg.Add(1)
 

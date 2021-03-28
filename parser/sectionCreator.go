@@ -71,7 +71,6 @@ func handleSlide(tag xml.StartElement) {
 		log.Println("Ignoring <slide/> with no attr")
 	}
 	current.FrameType = "slide"
-	log.Println(tag.Name, tag.Name.Local)
 	if tag.Name.Local == "highlight" {
 		current.FrameSubType = "highlight"
 	}

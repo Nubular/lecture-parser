@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -62,8 +63,6 @@ func GetPDFPage(pdfName string, imageName string, pageNum int) error {
 
 	mw.SetIteratorIndex(pageNum - 1)
 
-	log.Print("Converting ", pdfName, absPath)
-
 	// Set any compression (100 = max quality)
 	if err := mw.SetCompressionQuality(100); err != nil {
 		return err
@@ -120,13 +119,15 @@ func GetPDFPages(inPath string, outPath string, frames []parser.Section) error {
 		// 	return err
 		// }
 
-		log.Print("Converting ", inPath, " Writing to ", filepath.Join(outPath, frame.FrameSrc.ImageSrc))
-
 		// Save File
 		err = mw.WriteImage(filepath.Join(outPath, frame.FrameSrc.ImageSrc))
 
+		if err != nil {
+			return fmt.Errorf("%s [PDF extraction: page: %d, loc: %s, to %s] ", err, frame.Page, inPath, filepath.Join(outPath, frame.FrameSrc.ImageSrc))
+		}
+
 	}
-	return err
+	return nil
 }
 
 // GetPDF will take a filename of a pdf file and convert the file into an
