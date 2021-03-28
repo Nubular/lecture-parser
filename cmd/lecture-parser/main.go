@@ -16,18 +16,15 @@ var config Config
 
 // check for existence of files, extract file metadata (length of video, number of pages). Convert external videos to usable format.
 func main() {
-	// if err := extractor.GetPDFPage("slides1.pdf", "image.jpeg", 1); err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	absPath, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	inPath := filepath.Join(absPath, "altInput")
+	inPath := filepath.Join(absPath, "input")
 	outPath := filepath.Join(absPath, "output")
-	xmlPath := filepath.Join(inPath, "simple_lec.xml")
+	xmlPath := filepath.Join(inPath, "example_lec.xml")
 
 	start(xmlPath, inPath, outPath)
 }
@@ -43,6 +40,9 @@ func printSections() {
 }
 
 func start(xmlPath string, inPath string, outPath string) {
+
+	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+
 	var err error
 	config, err = loadConfig()
 	if err != nil {
@@ -65,7 +65,8 @@ func start(xmlPath string, inPath string, outPath string) {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	// printSections()
+	// return
 	err = getAudio(inPath, outPath)
 	if err != nil {
 		log.Panic(err)
