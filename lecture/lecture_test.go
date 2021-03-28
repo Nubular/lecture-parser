@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nubular/lecture-parser"
+	"github.com/nubular/lecture-parser/lecture"
 )
 
 func ExampleStart() {
@@ -17,7 +17,7 @@ func ExampleStart() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	absPath = filepath.Dir(absPath)
 	inPath := filepath.Join(absPath, "input")
 	outPath := filepath.Join(absPath, "output")
 	xmlPath := filepath.Join(inPath, "example_lec.xml")
