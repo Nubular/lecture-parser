@@ -1,4 +1,4 @@
-package main
+package lecture
 
 import (
 	"encoding/json"

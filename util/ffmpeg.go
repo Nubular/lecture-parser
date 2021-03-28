@@ -51,7 +51,7 @@ func AsyncCombineImageAudio(inPath string, outPath string, imageFolder string, a
 			default:
 			}
 			err := combineImageAudio(imagePath, audioPath, videoOutPath)
-			log.Printf("Done combining to %s", videoOutPath)
+			// log.Printf("Done combining to %s", videoOutPath)
 			if err != nil {
 				log.Println(err)
 				cancel()

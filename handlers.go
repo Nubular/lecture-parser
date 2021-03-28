@@ -1,4 +1,4 @@
-package main
+package lecture
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ func checkDupPage(frames []parser.Section, page int) bool {
 func getFrames(inPath string, outPath string) error {
 
 	if len(sections) == 0 {
-		return errors.New("No sections received")
+		return errors.New("no frame sections received")
 	}
 
 	// map from filename to array of frames to be extracted.
@@ -135,7 +135,7 @@ func getFrames(inPath string, outPath string) error {
 func getAudio(inPath string, outPath string) error {
 
 	if len(sections) == 0 {
-		return errors.New("no sections received")
+		return errors.New("no audio sections received")
 	}
 
 	ssml := make([]parser.Section, 0)
@@ -193,7 +193,7 @@ func serializeSections(outPath string) error {
 func getClips(inPath string, outPath string) error {
 
 	if len(sections) == 0 {
-		return errors.New("No sections received")
+		return errors.New("no video sections received")
 	}
 	// Folder the corresponding media goes in
 	imageFolder := "FRAMES"

@@ -1,11 +1,10 @@
-package main
+package lecture
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/nubular/lecture-parser/parser"
 )
@@ -13,21 +12,6 @@ import (
 // @TODO: Remove these and use pointers instead
 var sections []parser.Section
 var config Config
-
-// check for existence of files, extract file metadata (length of video, number of pages). Convert external videos to usable format.
-func main() {
-
-	absPath, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	inPath := filepath.Join(absPath, "input")
-	outPath := filepath.Join(absPath, "output")
-	xmlPath := filepath.Join(inPath, "example_lec.xml")
-
-	start(xmlPath, inPath, outPath)
-}
 
 func printSections() {
 	fmt.Print("\n[")
@@ -39,7 +23,7 @@ func printSections() {
 	fmt.Print("]\n")
 }
 
-func start(xmlPath string, inPath string, outPath string) {
+func Start(xmlPath string, inPath string, outPath string) {
 
 	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 
