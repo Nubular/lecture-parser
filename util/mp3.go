@@ -118,7 +118,7 @@ func CreateMP3(outPath string, ssmlFrames []parser.Section, cacheFiles bool) err
 			}
 			err := ttsPolly(ssml, audioOutPath, svc)
 
-			log.Println("Done Writing to ", audioOutPath)
+			// log.Println("Done Writing to ", audioOutPath)
 			if err != nil {
 				log.Println(err)
 				cancel()

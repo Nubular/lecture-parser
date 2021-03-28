@@ -82,7 +82,10 @@ func GetPDFPages(inPath string, outPath string, frames []parser.Section) error {
 
 	if _, err := os.Stat(outPath); os.IsNotExist(err) {
 		log.Println("Output dir not found. Creating at ", outPath)
-		os.Mkdir(outPath, os.ModePerm)
+		err := os.Mkdir(outPath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("[PDF Extractor] %s", err)
+		}
 	}
 
 	imagick.Initialize()

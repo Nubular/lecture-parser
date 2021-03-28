@@ -12,6 +12,10 @@ type Config struct {
 	CacheFiles bool `json:"cacheFiles"`
 }
 
+func SetConfig(configstr Config) {
+	config = configstr
+}
+
 func loadConfig() (Config, error) {
 	absPath, err := os.Getwd()
 	if err != nil {

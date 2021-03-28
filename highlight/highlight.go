@@ -15,7 +15,15 @@ import (
 
 func highlightImage(imagePath string, points string, outPath string) error {
 	list := strings.Split(points, " ")
-	command := []string{"highlight/east.py", "--input", string(imagePath), "--output", string(outPath), "--list"}
+
+	absPath, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// absPath = filepath.Dir(absPath)
+	pythonPath := filepath.Join(absPath, "highlight/east.py")
+	command := []string{pythonPath, "--input", string(imagePath), "--output", string(outPath), "--list"}
 	command = append(command, list...)
 	cmd := exec.Command("python", command...)
 	// cmd := exec.Command("python", "test.py")
@@ -35,6 +43,9 @@ func AsyncHighlightImage(inPath, outPath string, frames []parser.Section) error 
 	if _, err := os.Stat(outPath); os.IsNotExist(err) {
 		log.Println("Output dir not found. Creating at ", outPath)
 		os.Mkdir(outPath, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("[Highlighter] %s", err)
+		}
 	}
 
 	var wg sync.WaitGroup

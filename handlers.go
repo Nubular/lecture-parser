@@ -48,6 +48,14 @@ func getFrames(inPath string, outPath string) error {
 				slides[section.SlideDeck.Src] = make([]parser.Section, 0)
 			}
 
+			// Check if page already in list to be rendered
+			if !checkDupPage(slides[section.SlideDeck.Src], section.Page) {
+				filename := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
+
+				sections[i].FrameSrc.ImageSrc = filename
+				slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], sections[i])
+			}
+			// requires original slide image to be in FRAMES
 			if section.FrameSubType == "highlight" {
 
 				resourceName := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
@@ -58,18 +66,8 @@ func getFrames(inPath string, outPath string) error {
 				sections[i].FrameSrc.ImageSrc = filename
 
 				highlightFrames = append(highlightFrames, sections[i])
-			} else {
-				prevFramePath = sections[i].FrameSrc.ImageSrc
-
-				filename := fmt.Sprintf("%s_%d.jpg", section.SlideDeck.ID, section.Page)
-
-				sections[i].FrameSrc.ImageSrc = filename
-				// Check if page already in list to be rendered
-				if checkDupPage(slides[section.SlideDeck.Src], section.Page) {
-					continue
-				}
-				slides[section.SlideDeck.Src] = append(slides[section.SlideDeck.Src], sections[i])
 			}
+			prevFramePath = sections[i].FrameSrc.ImageSrc
 
 		} else if section.FrameType == "image" {
 			sections[i].FrameSrc.ImageSrc = section.ResourceSrc
@@ -120,7 +118,6 @@ func getFrames(inPath string, outPath string) error {
 	} else {
 		log.Println("Could not identify any images to be transferred")
 	}
-
 	if len(video) != 0 {
 		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, videoFolder), video)
 		if err != nil {

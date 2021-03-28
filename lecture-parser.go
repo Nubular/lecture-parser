@@ -28,10 +28,10 @@ func Start(xmlPath string, inPath string, outPath string) {
 	os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 
 	var err error
-	config, err = loadConfig()
-	if err != nil {
-		log.Println(err)
-	}
+	// config, err = loadConfig()
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
 	meta, err := parser.GetMeta(xmlPath)
 	if err != nil {
@@ -44,7 +44,6 @@ func Start(xmlPath string, inPath string, outPath string) {
 		log.Panic(err)
 	}
 
-	// printSections()
 	err = getFrames(inPath, outPath)
 	if err != nil {
 		log.Panic(err)

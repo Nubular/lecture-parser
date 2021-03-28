@@ -9,6 +9,10 @@ import (
 )
 
 func ExampleStart() {
+	conf := lecture.Config{
+		CacheFiles: true,
+	}
+	lecture.SetConfig(conf)
 	absPath, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
