@@ -48,8 +48,9 @@ func Start(xmlPath string, inPath string, outPath string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	// printSections()
-	// return
+
+	printSections()
+	return
 	err = getAudio(inPath, outPath)
 	if err != nil {
 		log.Panic(err)

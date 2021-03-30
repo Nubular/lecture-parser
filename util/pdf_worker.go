@@ -94,7 +94,7 @@ func GetPDFPages(inPath string, outPath string, frames []parser.Section) error {
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 
-	if err := mw.SetResolution(100, 100); err != nil {
+	if err := mw.SetResolution(300, 300); err != nil {
 		return err
 	}
 

@@ -21,15 +21,16 @@ func highlightImage(imagePath string, points string, outPath string) error {
 		log.Fatal(err)
 	}
 
-	// absPath = filepath.Dir(absPath)
+	absPath = filepath.Dir(absPath)
 	pythonPath := filepath.Join(absPath, "highlight/east.py")
-	command := []string{pythonPath, "--input", string(imagePath), "--output", string(outPath), "--list"}
+	command := []string{pythonPath, "--input", string(imagePath), "-gr", "--output", string(outPath), "--list"}
 	command = append(command, list...)
+	// log.Println(command)
 	cmd := exec.Command("python", command...)
 	// cmd := exec.Command("python", "test.py")
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s for image: %s and outPath %s", stdoutStderr, imagePath, outPath)
+		return fmt.Errorf("%s for image: %s and outPath %s with list %v", stdoutStderr, imagePath, outPath, list)
 	}
 	return nil
 }

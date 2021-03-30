@@ -200,19 +200,13 @@ def main():
     inpWidth = args.width
     inpHeight = args.height
     modelDetector = args.model    
+    printReference = args.generate_reference
     scriptDir = os.path.dirname(__file__)
     outputList = [int(x) for x in args.list]
-    if len(outputList) == 0:
+    if len(outputList) == 0 and not printReference:
         return
 
-    printReference = args.generate_reference
-    x_bias = 0.1
-    y_bias = 10
-    minD = 30
-    alpha = 0.5
-    alpha_slider_max = 100
-    x_bias_max = 100
-    y_bias_max = 10
+
 
     detector = cv.dnn.readNet(scriptDir+ '/' + modelDetector)
 
@@ -221,6 +215,12 @@ def main():
     frame = cv.imread(inPath)
     height_ = frame.shape[0]
     width_ = frame.shape[1]
+
+    x_bias = 1
+    y_bias = 10
+    maxD = 0.2*width_
+    print(maxD)
+    alpha = 0.5
 
     inpHeight = height_ - (height_ % 32)
     inpWidth = width_ - (width_ % 32)
@@ -246,8 +246,9 @@ def main():
     for i in indices:
         (center_x, center_y) = np.round(boxes[i][0]).astype("int")
         centers.append((center_x*x_bias, center_y*y_bias))
+    print(centers)
     # Do camera stuff
-    db = DBSCAN(eps=minD, min_samples=1).fit(centers)
+    db = DBSCAN(eps=maxD, min_samples=1).fit(centers)
 
     cluster = {}
 

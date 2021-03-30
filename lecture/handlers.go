@@ -8,6 +8,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/nubular/lecture-parser/highlight"
 	"github.com/nubular/lecture-parser/parser"
 	"github.com/nubular/lecture-parser/util"
 )
@@ -91,6 +92,7 @@ func getFrames(inPath string, outPath string) error {
 		}
 
 	}
+
 	// Make this more async Awaitey?
 	for src, frame := range slides {
 		srcPath := filepath.Join(inPath, src)
@@ -109,16 +111,15 @@ func getFrames(inPath string, outPath string) error {
 		log.Println("Could not identify any images to be transferred")
 	}
 	// until I figure out the syscall path issue
-
-	// if len(highlightFrames) != 0 {
-	// 	imageFolderPath := filepath.Join(outPath, "FRAMES")
-	// 	err := highlight.AsyncHighlightImage(imageFolderPath, filepath.Join(outPath, imageFolder), highlightFrames)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// } else {
-	// 	log.Println("Could not identify any images to be transferred")
-	// }
+	if len(highlightFrames) != 0 {
+		imageFolderPath := filepath.Join(outPath, "FRAMES")
+		err := highlight.AsyncHighlightImage(imageFolderPath, filepath.Join(outPath, imageFolder), highlightFrames)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Could not identify any images to be transferred")
+	}
 	if len(video) != 0 {
 		err := util.AsyncCopyFrames(inPath, filepath.Join(outPath, videoFolder), video)
 		if err != nil {
@@ -190,9 +191,6 @@ func serializeSections(outPath string) error {
 
 func getClips(inPath string, outPath string) error {
 
-	if len(sections) == 0 {
-		return errors.New("no video sections received")
-	}
 	// Folder the corresponding media goes in
 	imageFolder := "FRAMES"
 	audioFolder := "AUDIO"

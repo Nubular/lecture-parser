@@ -18,7 +18,9 @@
 input/
 output/
 altInput/
+example_input/
 highlight/FRAMES/
+*.jpg
 *.pb
 *.tar.gz
 .vscode/

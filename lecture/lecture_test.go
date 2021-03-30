@@ -18,9 +18,12 @@ func ExampleStart() {
 		log.Fatal(err)
 	}
 	absPath = filepath.Dir(absPath)
-	inPath := filepath.Join(absPath, "input")
+	// inPath := filepath.Join(absPath, "input")
+	// outPath := filepath.Join(absPath, "output")
+	// xmlPath := filepath.Join(inPath, "example_lec.xml")
+	inPath := filepath.Join(absPath, "example_input")
 	outPath := filepath.Join(absPath, "output")
-	xmlPath := filepath.Join(inPath, "example_lec.xml")
+	xmlPath := filepath.Join(inPath, "SampleLec.xml")
 
 	lecture.Start(xmlPath, inPath, outPath)
 	// Output: test
