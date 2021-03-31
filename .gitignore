@@ -21,6 +21,7 @@ altInput/
 example_input/
 highlight/FRAMES/
 *.jpg
+*.png
 *.pb
 *.tar.gz
 .vscode/

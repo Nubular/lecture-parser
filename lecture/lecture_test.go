@@ -10,7 +10,8 @@ import (
 
 func ExampleStart() {
 	conf := lecture.Config{
-		CacheFiles: true,
+		CacheFiles: false,
+		ScriptPath: "/run/media/nubular/Shared/repo/lecture-parser/test/east.py",
 	}
 	lecture.SetConfig(conf)
 	absPath, err := os.Getwd()

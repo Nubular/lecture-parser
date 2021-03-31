@@ -1,3 +1,4 @@
 {
-   "cacheFiles": true
+   "cacheFiles": true,
+   "scriptPath" : "/run/media/nubular/Shared/repo/lecture-parser/highlight/east.py"
 }

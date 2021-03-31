@@ -110,10 +110,14 @@ func getFrames(inPath string, outPath string) error {
 	} else {
 		log.Println("Could not identify any images to be transferred")
 	}
+
+	if config.ScriptPath == "" {
+		return fmt.Errorf("no .py script path provided")
+	}
 	// until I figure out the syscall path issue
 	if len(highlightFrames) != 0 {
 		imageFolderPath := filepath.Join(outPath, "FRAMES")
-		err := highlight.AsyncHighlightImage(imageFolderPath, filepath.Join(outPath, imageFolder), highlightFrames)
+		err := highlight.AsyncHighlightImage(imageFolderPath, filepath.Join(outPath, imageFolder), config.ScriptPath, highlightFrames)
 		if err != nil {
 			return err
 		}

@@ -9,7 +9,8 @@ import (
 
 // Config struct for the module, update as necessary
 type Config struct {
-	CacheFiles bool `json:"cacheFiles"`
+	CacheFiles bool   `json:"cacheFiles"`
+	ScriptPath string `json:"scriptPath"`
 }
 
 func SetConfig(configstr Config) {
